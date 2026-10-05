@@ -37,7 +37,7 @@ jobs:
         
         # 1. Compile libconcord but don't package it yet
         cd libconcord
-        mkdir m4; autoreconf --install
+        mkdir -p m4; autoreconf --install
         ./configure
         make
         sudo make install
