@@ -31,39 +31,30 @@ jobs:
         python3 -c 'import libconcord; print(libconcord)'
         cd -
         
-    - name: Build libconcord and Package concordance
+    - name: Build and Package libconcord
       run: |
         sudo apt-get install -y checkinstall
-
-        # 1. Build and install libconcord natively onto the runner system
         cd libconcord
         mkdir -p m4; autoreconf --install
         ./configure
         make
-        sudo make install
+        sudo checkinstall --default --pkgname=libconcord make install
         sudo ldconfig
+        mv *.deb ../
         cd -
 
-        # 2. Build concordance and let checkinstall package it
+    - name: Build and Package concordance
+      run: |
         cd concordance
         mkdir -p m4; autoreconf --install
         ./configure
         make
-        
-        # 3. Create the .deb package. 
-        # We pass libconcord.so.6 manually into checkinstall's tracking system
-        # by copying it into the local folder where 'make install' executes.
-        sudo cp -d /usr/local/lib/libconcord.so* .
-        
-        # We use an altered install command string to make sure checkinstall bundles the .so files too
-        sudo checkinstall --default --pkgname=concordance \
-          --run="make install && cp -d libconcord.so* /usr/local/lib/"
-        
+        sudo checkinstall --default --pkgname=concordance make install
         mv *.deb ../
         cd -
 
-    - name: Upload Debian Package Artifact
+    - name: Upload Debian Packages
       uses: actions/upload-artifact@v4
       with:
-        name: concordance-deb-package
+        name: concordance-deb-packages
         path: ./*.deb
