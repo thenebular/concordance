@@ -30,19 +30,11 @@ jobs:
         pip install dist/*.whl
         python3 -c 'import libconcord; print(libconcord)'
         cd -
-#    - name: Build concordance
-#      run: |
-#        cd concordance
-#        mkdir m4; autoreconf --install
-#        ./configure
-#        make
-#        sudo make install
-#        cd -
-#        concordance --version
-        - name: Build libconcord and concordance
+        
+    - name: Build libconcord and concordance
       run: |
         sudo apt-get install -y checkinstall
-
+        
         # 1. Compile libconcord but don't package it yet
         cd libconcord
         mkdir m4; autoreconf --install
