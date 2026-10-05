@@ -31,11 +31,11 @@ jobs:
         python3 -c 'import libconcord; print(libconcord)'
         cd -
         
-    - name: Build libconcord and concordance
+    - name: Build libconcord and Package concordance
       run: |
         sudo apt-get install -y checkinstall
-        
-        # 1. Compile libconcord but don't package it yet
+
+        # 1. Build and install libconcord natively onto the runner system
         cd libconcord
         mkdir -p m4; autoreconf --install
         ./configure
@@ -44,18 +44,20 @@ jobs:
         sudo ldconfig
         cd -
 
-        # 2. Compile concordance
+        # 2. Build concordance and let checkinstall package it
         cd concordance
-        mkdir m4; autoreconf --install
+        mkdir -p m4; autoreconf --install
         ./configure
         make
         
-        # 3. Create a single package tracking files from both builds
-        # We manually copy libconcord's shared libraries into the folder 
-        # so checkinstall catches them all together.
-        sudo cp -d /usr/local/lib/libconcord.so* /usr/local/bin/concordance .
+        # 3. Create the .deb package. 
+        # We pass libconcord.so.6 manually into checkinstall's tracking system
+        # by copying it into the local folder where 'make install' executes.
+        sudo cp -d /usr/local/lib/libconcord.so* .
         
-        sudo checkinstall --default --pkgname=concordance make install
+        # We use an altered install command string to make sure checkinstall bundles the .so files too
+        sudo checkinstall --default --pkgname=concordance \
+          --run="make install && cp -d libconcord.so* /usr/local/lib/"
         
         mv *.deb ../
         cd -
