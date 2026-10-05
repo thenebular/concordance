@@ -30,12 +30,37 @@ jobs:
         pip install dist/*.whl
         python3 -c 'import libconcord; print(libconcord)'
         cd -
-    - name: Build concordance
+#    - name: Build concordance
+#      run: |
+#        cd concordance
+#        mkdir m4; autoreconf --install
+#        ./configure
+#        make
+#        sudo make install
+#        cd -
+#        concordance --version
+    - name: Build and Package concordance
       run: |
+        # Install checkinstall tool
+        sudo apt-get install -y checkinstall
+        
+        # Build Concordance
         cd concordance
         mkdir m4; autoreconf --install
         ./configure
         make
-        sudo make install
+        
+        # Run checkinstall to create the .deb package
+        # --default accepts all default prompts automatically
+        # --pkgname defines the name of the package
+        sudo checkinstall --default --pkgname=concordance make install
+        
+        # Move the newly generated .deb file out to the root directory
+        mv *.deb ../
         cd -
-        concordance --version
+
+    - name: Upload Debian Package Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: concordance-deb-package
+        path: ./*.deb
