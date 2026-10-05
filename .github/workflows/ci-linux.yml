@@ -39,23 +39,32 @@ jobs:
 #        sudo make install
 #        cd -
 #        concordance --version
-    - name: Build and Package concordance
+        - name: Build libconcord and concordance
       run: |
-        # Install checkinstall tool
         sudo apt-get install -y checkinstall
-        
-        # Build Concordance
+
+        # 1. Compile libconcord but don't package it yet
+        cd libconcord
+        mkdir m4; autoreconf --install
+        ./configure
+        make
+        sudo make install
+        sudo ldconfig
+        cd -
+
+        # 2. Compile concordance
         cd concordance
         mkdir m4; autoreconf --install
         ./configure
         make
         
-        # Run checkinstall to create the .deb package
-        # --default accepts all default prompts automatically
-        # --pkgname defines the name of the package
+        # 3. Create a single package tracking files from both builds
+        # We manually copy libconcord's shared libraries into the folder 
+        # so checkinstall catches them all together.
+        sudo cp -d /usr/local/lib/libconcord.so* /usr/local/bin/concordance .
+        
         sudo checkinstall --default --pkgname=concordance make install
         
-        # Move the newly generated .deb file out to the root directory
         mv *.deb ../
         cd -
 
